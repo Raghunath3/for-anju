@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+  background: #3b2a1d;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.page{
+  background:white;
+}
+
+.page img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: white;
+}
