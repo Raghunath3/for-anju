@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HTMLFlipBook from "react-pageflip";
 
 import p1 from "./images/1.png";
@@ -17,20 +17,40 @@ import p13 from "./images/13.png";
 
 import "./App.css";
 
-const pages = [p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13];
+const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
+
+const MOBILE_BREAKPOINT = 768;
 
 function App() {
-  const [bookSize, setBookSize] = useState({
-    width: 400,
-    height: 565,
-  });
+  const flipBook = useRef(null);
 
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth < MOBILE_BREAKPOINT
+  );
+
+  const [bookSize, setBookSize] = useState({ width: 400, height: 565 });
+
+  const [loading, setLoading] = useState(true);
+
+  // Responsive book size + mobile/desktop mode
   useEffect(() => {
     function resizeBook() {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      const width = Math.min(vw * 0.42, 430);
+      const mobile = vw < MOBILE_BREAKPOINT;
+      setIsMobile(mobile);
+
+      let width;
+
+      if (mobile) {
+        // Single page, large, fills most of the screen
+        width = Math.min(vw * 0.92, 480);
+      } else {
+        // Two-page spread, so each page is roughly half the usable width
+        width = Math.min(vw * 0.46, 500);
+      }
+
       const height = width * 1.414;
 
       setBookSize({
@@ -40,27 +60,108 @@ function App() {
     }
 
     resizeBook();
+
     window.addEventListener("resize", resizeBook);
 
     return () => window.removeEventListener("resize", resizeBook);
   }, []);
 
+  // Loading screen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Auto-open cover (re-runs whenever loading finishes OR mode switches,
+  // since switching mode remounts the flipbook)
+  useEffect(() => {
+    if (!loading && flipBook.current) {
+      const timer = setTimeout(() => {
+        try {
+          flipBook.current.pageFlip().flipNext();
+        } catch (err) {
+          console.log(err);
+        }
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isMobile]);
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <h1>For Anju ❤️</h1>
+        <p>Every page holds a piece of my heart.</p>
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
-      <HTMLFlipBook
-        width={bookSize.width}
-        height={bookSize.height}
-        size="fixed"
-        showCover={true}
-        mobileScrollSupport={true}
-        maxShadowOpacity={0.5}
-      >
-        {pages.map((img, index) => (
-          <div className="page" key={index}>
-            <img src={img} alt={`Page ${index + 1}`} />
-          </div>
-        ))}
-      </HTMLFlipBook>
+      <div className={`book-wrapper ${isMobile ? "mobile-mode" : "desktop-mode"}`}>
+        {isMobile ? (
+          <HTMLFlipBook
+            key="mobile-book"
+            ref={flipBook}
+            width={bookSize.width}
+            height={bookSize.height}
+            size="fixed"
+            minWidth={250}
+            maxWidth={500}
+            minHeight={353}
+            maxHeight={750}
+            showCover={true}
+            usePortrait={true}
+            mobileScrollSupport={true}
+            maxShadowOpacity={0.5}
+            disableFlipByClick={true}
+            clickEventForward={false}
+            flippingTime={900}
+          >
+            {pages.map((img, index) => (
+              <div
+                className={`page ${index === 0 ? "cover-page" : ""}`}
+                key={index}
+              >
+                <img src={img} alt={`Page ${index + 1}`} />
+              </div>
+            ))}
+          </HTMLFlipBook>
+        ) : (
+          <HTMLFlipBook
+            key="desktop-book"
+            ref={flipBook}
+            width={bookSize.width}
+            height={bookSize.height}
+            size="fixed"
+            minWidth={250}
+            maxWidth={500}
+            minHeight={353}
+            maxHeight={707}
+            showCover={true}
+            usePortrait={false}
+            mobileScrollSupport={true}
+            maxShadowOpacity={0.5}
+            disableFlipByClick={true}
+            clickEventForward={false}
+            flippingTime={900}
+          >
+            {pages.map((img, index) => (
+              <div
+                className={`page ${index === 0 ? "cover-page" : ""}`}
+                key={index}
+              >
+                <img src={img} alt={`Page ${index + 1}`} />
+              </div>
+            ))}
+          </HTMLFlipBook>
+        )}
+      </div>
     </div>
   );
 }
