@@ -22,13 +22,8 @@ const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
 const MOBILE_BREAKPOINT = 768;
 const LOADING_DURATION = 4200; // ms — time the "For Anju" screen stays up
 
-// Put a real short page-turn sound at public/sounds/page-turn.mp3 to enable
-// audio. If the file isn't there, this just fails silently — no fake sound.
-const PAGE_TURN_SOUND_PATH = "/sounds/page-turn.mp3";
-
 function App() {
   const flipBook = useRef(null);
-  const audioRef = useRef(null);
 
   const [isMobile, setIsMobile] = useState(
     window.innerWidth < MOBILE_BREAKPOINT
@@ -38,8 +33,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasFlipped, setHasFlipped] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
-  const [revealIndex, setRevealIndex] = useState(null);
 
   // ===========================
   // Responsive book size + mode
@@ -84,35 +77,6 @@ function App() {
     setCurrentPage(0);
   }, [isMobile]);
 
-  // Trigger a fresh "reveal" flash every time the active page changes
-  useEffect(() => {
-    setRevealIndex(null);
-    const raf = requestAnimationFrame(() => setRevealIndex(currentPage));
-    const clear = setTimeout(() => setRevealIndex(null), 750);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(clear);
-    };
-  }, [currentPage]);
-
-  // Prepare the audio element once
-  useEffect(() => {
-    const audio = new Audio(PAGE_TURN_SOUND_PATH);
-    audio.volume = 0.5;
-    audioRef.current = audio;
-  }, []);
-
-  const playFlipSound = useCallback(() => {
-    if (!soundOn || !audioRef.current) return;
-    try {
-      audioRef.current.currentTime = 0;
-      // If the file doesn't exist yet, this rejects quietly — no fallback noise.
-      audioRef.current.play().catch(() => {});
-    } catch (err) {
-      // no-op, stay silent
-    }
-  }, [soundOn]);
-
   // ===========================
   // Navigation
   // ===========================
@@ -123,10 +87,9 @@ function App() {
     const current = book.getCurrentPageIndex();
     if (current < pages.length - 1) {
       book.flipNext();
-      playFlipSound();
       setHasFlipped(true);
     }
-  }, [playFlipSound]);
+  }, []);
 
   const goPrev = useCallback(() => {
     const book = flipBook.current?.pageFlip();
@@ -137,21 +100,16 @@ function App() {
       // turnToPage is more reliable than flipPrev(), which can drift out of
       // sync with the library's own internal index after a remount/resize.
       book.turnToPage(current - 1);
-      playFlipSound();
       setHasFlipped(true);
     }
-  }, [playFlipSound]);
+  }, []);
 
-  const jumpToPage = useCallback(
-    (index) => {
-      const book = flipBook.current?.pageFlip();
-      if (!book) return;
-      book.turnToPage(index);
-      playFlipSound();
-      setHasFlipped(true);
-    },
-    [playFlipSound]
-  );
+  const jumpToPage = useCallback((index) => {
+    const book = flipBook.current?.pageFlip();
+    if (!book) return;
+    book.turnToPage(index);
+    setHasFlipped(true);
+  }, []);
 
   const replay = useCallback(() => {
     jumpToPage(0);
@@ -224,12 +182,7 @@ function App() {
               onFlip={handleFlip}
             >
               {pages.map((img, index) => (
-                <div
-                  className={`page ${
-                    revealIndex === index ? "revealing" : ""
-                  }`}
-                  key={index}
-                >
+                <div className="page" key={index}>
                   <img
                     src={img}
                     alt={`Page ${index + 1}`}
@@ -260,12 +213,7 @@ function App() {
               onFlip={handleFlip}
             >
               {pages.map((img, index) => (
-                <div
-                  className={`page ${
-                    revealIndex === index ? "revealing" : ""
-                  }`}
-                  key={index}
-                >
+                <div className="page" key={index}>
                   <img
                     src={img}
                     alt={`Page ${index + 1}`}
@@ -344,22 +292,9 @@ function App() {
           >
             ›
           </button>
-
-          <button
-            type="button"
-            className="mute-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSoundOn((s) => !s);
-            }}
-            aria-label={soundOn ? "Mute sound" : "Unmute sound"}
-            title={soundOn ? "Mute sound" : "Unmute sound"}
-          >
-            {soundOn ? "🔊" : "🔇"}
-          </button>
         </div>
 
-        {/* Page count — desktop only, hidden on mobile per request */}
+        {/* Page count — desktop only */}
         <span className="page-indicator desktop-only">
           {currentPage + 1} / {pages.length}
         </span>
