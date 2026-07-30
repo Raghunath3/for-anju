@@ -34,9 +34,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasFlipped, setHasFlipped] = useState(false);
 
-  // ===========================
-  // Responsive book size + mode
-  // ===========================
   useEffect(() => {
     function resizeBook() {
       const vw = window.innerWidth;
@@ -69,20 +66,15 @@ function App() {
     return () => window.removeEventListener("resize", resizeBook);
   }, []);
 
-  // Loading screen
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), LOADING_DURATION);
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset page counter whenever the book remounts (mobile <-> desktop)
   useEffect(() => {
     setCurrentPage(0);
   }, [isMobile]);
 
-  // ===========================
-  // Navigation
-  // ===========================
   const goNext = useCallback(() => {
     const book = flipBook.current?.pageFlip();
     if (!book) return;
@@ -166,7 +158,7 @@ function App() {
               maxWidth={500}
               minHeight={353}
               maxHeight={750}
-              showCover={true}
+              showCover={false}
               usePortrait={true}
               mobileScrollSupport={true}
               maxShadowOpacity={0.5}
@@ -197,7 +189,7 @@ function App() {
               maxWidth={500}
               minHeight={353}
               maxHeight={707}
-              showCover={true}
+              showCover={false}
               usePortrait={false}
               mobileScrollSupport={true}
               maxShadowOpacity={0.5}
