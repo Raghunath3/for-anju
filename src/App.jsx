@@ -22,9 +22,13 @@ const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
 const MOBILE_BREAKPOINT = 768;
 const LOADING_DURATION = 4200; // ms — time the "For Anju" screen stays up
 
+// Put a real short page-turn sound at public/sounds/page-turn.mp3 to enable
+// audio. If the file isn't there, this just fails silently — no fake sound.
+const PAGE_TURN_SOUND_PATH = "/sounds/page-turn.mp3";
+
 function App() {
   const flipBook = useRef(null);
-  const audioCtxRef = useRef(null);
+  const audioRef = useRef(null);
 
   const [isMobile, setIsMobile] = useState(
     window.innerWidth < MOBILE_BREAKPOINT
@@ -91,43 +95,21 @@ function App() {
     };
   }, [currentPage]);
 
-  // ===========================
-  // Sound (synthesized, no file needed)
-  // ===========================
+  // Prepare the audio element once
+  useEffect(() => {
+    const audio = new Audio(PAGE_TURN_SOUND_PATH);
+    audio.volume = 0.5;
+    audioRef.current = audio;
+  }, []);
+
   const playFlipSound = useCallback(() => {
-    if (!soundOn) return;
-
+    if (!soundOn || !audioRef.current) return;
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
-      const ctx = audioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume();
-
-      const duration = 0.16;
-      const bufferSize = Math.floor(ctx.sampleRate * duration);
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      for (let i = 0; i < bufferSize; i++) {
-        const decay = Math.pow(1 - i / bufferSize, 2.2);
-        data[i] = (Math.random() * 2 - 1) * decay;
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = "bandpass";
-      filter.frequency.value = 2000;
-      filter.Q.value = 0.6;
-
-      const gain = ctx.createGain();
-      gain.gain.value = 0.14;
-
-      noise.connect(filter).connect(gain).connect(ctx.destination);
-      noise.start();
+      audioRef.current.currentTime = 0;
+      // If the file doesn't exist yet, this rejects quietly — no fallback noise.
+      audioRef.current.play().catch(() => {});
     } catch (err) {
-      console.log(err);
+      // no-op, stay silent
     }
   }, [soundOn]);
 
@@ -243,7 +225,7 @@ function App() {
             >
               {pages.map((img, index) => (
                 <div
-                  className={`page ${index === 0 ? "cover-page" : ""} ${
+                  className={`page ${
                     revealIndex === index ? "revealing" : ""
                   }`}
                   key={index}
@@ -279,7 +261,7 @@ function App() {
             >
               {pages.map((img, index) => (
                 <div
-                  className={`page ${index === 0 ? "cover-page" : ""} ${
+                  className={`page ${
                     revealIndex === index ? "revealing" : ""
                   }`}
                   key={index}
@@ -377,7 +359,8 @@ function App() {
           </button>
         </div>
 
-        <span className="page-indicator">
+        {/* Page count — desktop only, hidden on mobile per request */}
+        <span className="page-indicator desktop-only">
           {currentPage + 1} / {pages.length}
         </span>
       </div>

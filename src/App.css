@@ -14,7 +14,7 @@ body {
   overflow: hidden;
   background: url("./assets/wood.jpg") center center / cover no-repeat fixed;
   font-family: Georgia, serif;
-  touch-action: manipulation; /* discourage double-tap / pinch zoom */
+  touch-action: manipulation;
 }
 
 /* ===========================
@@ -36,8 +36,6 @@ body {
   animation: fadeIn 0.8s ease;
 }
 
-/* Warm ambient vignette */
-
 .container::before {
   content: "";
 
@@ -54,8 +52,6 @@ body {
 
   pointer-events: none;
 }
-
-/* Spotlight glow sitting above the book, like a lamp */
 
 .spotlight-glow {
   position: absolute;
@@ -126,9 +122,6 @@ body {
   cursor: grabbing;
 }
 
-/* Hardcover spine — desktop (spread) only, inset slightly top/bottom
-   so it doesn't touch the dead edge with zero breathing room */
-
 .desktop-mode::before {
   content: "";
 
@@ -150,8 +143,6 @@ body {
     inset -2px 0 3px rgba(255, 255, 255, 0.15),
     2px 0 8px rgba(0, 0, 0, 0.35);
 }
-
-/* Mobile mode — its own lighter shadow instead of spine/thickness */
 
 .mobile-mode {
   box-shadow:
@@ -203,8 +194,6 @@ body {
   z-index: 1;
 }
 
-/* Soft ambient light pool on the surface under the book */
-
 .light-pool {
   width: min(70vw, 480px);
   height: 60px;
@@ -222,21 +211,17 @@ body {
 }
 
 /* ===========================
-   Pages
+   Pages — every page rounded now
 =========================== */
 
 .page {
   overflow: hidden;
   background: white;
-  border-radius: 2px;
+  border-radius: 12px;
 
   box-shadow:
     inset 0 0 2px rgba(0, 0, 0, 0.18),
     0 8px 25px rgba(0, 0, 0, 0.18);
-}
-
-.cover-page {
-  border-radius: 12px;
 }
 
 .page img {
@@ -250,8 +235,6 @@ body {
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
 }
-
-/* Reveal flash whenever a page becomes the active one */
 
 .page.revealing img {
   animation: revealFade 0.7s ease;
@@ -285,7 +268,7 @@ body {
   background: rgba(36, 23, 13, 0.55);
   border-radius: 12px;
 
-  pointer-events: none; /* only the button below should catch clicks */
+  pointer-events: none;
 
   animation: fadeIn 1s ease;
 }
@@ -324,7 +307,7 @@ body {
 
 .nav-controls {
   position: relative;
-  z-index: 20; /* sit above the book so touches always reach these buttons */
+  z-index: 20;
 
   display: flex;
   align-items: center;
@@ -389,8 +372,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Pulsing hint on the Next button before the first flip */
-
 .nav-btn.pulse-hint {
   animation: pulseHint 1.6s ease-in-out infinite;
 }
@@ -404,8 +385,6 @@ body {
     box-shadow: 0 0 0 10px rgba(255, 214, 140, 0);
   }
 }
-
-/* Progress dots */
 
 .progress-dots {
   display: flex;
@@ -452,6 +431,13 @@ body {
   font-size: 14px;
   letter-spacing: 0.5px;
   opacity: 0.8;
+}
+
+/* Hide the "x / y" count on mobile, keep it on desktop */
+@media (max-width: 768px) {
+  .page-indicator.desktop-only {
+    display: none;
+  }
 }
 
 /* ===========================
