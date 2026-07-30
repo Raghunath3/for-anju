@@ -17,10 +17,6 @@ body {
   touch-action: manipulation;
 }
 
-/* ===========================
-   Main Container
-=========================== */
-
 .container {
   width: 100%;
   height: 100vh;
@@ -82,10 +78,6 @@ body {
   }
 }
 
-/* ===========================
-   Book + Nav wrapper
-=========================== */
-
 .book-and-nav {
   display: flex;
   flex-direction: column;
@@ -95,7 +87,7 @@ body {
   position: relative;
   z-index: 5;
 
-  padding-top: 24px;
+  padding-top: 48px; /* increased so the book never touches the viewport edge */
 }
 
 .book-wrapper {
@@ -149,10 +141,6 @@ body {
     0 12px 20px rgba(0, 0, 0, 0.25),
     0 30px 70px rgba(0, 0, 0, 0.45);
 }
-
-/* ===========================
-   Layered page edges (desktop)
-=========================== */
 
 .page-edges {
   position: absolute;
@@ -210,10 +198,6 @@ body {
   margin-top: -8px;
 }
 
-/* ===========================
-   Pages — every page rounded
-=========================== */
-
 .page {
   overflow: hidden;
   background: white;
@@ -235,10 +219,6 @@ body {
   -webkit-user-drag: none;
   -webkit-touch-callout: none;
 }
-
-/* ===========================
-   The End overlay
-=========================== */
 
 .the-end-overlay {
   position: absolute;
@@ -285,10 +265,6 @@ body {
 .replay-btn:hover {
   background: rgba(255, 255, 255, 0.18);
 }
-
-/* ===========================
-   Navigation controls
-=========================== */
 
 .nav-controls {
   position: relative;
@@ -416,10 +392,6 @@ body {
   }
 }
 
-/* ===========================
-   Loading Screen
-=========================== */
-
 .loading-screen {
   width: 100%;
   height: 100vh;
@@ -458,10 +430,6 @@ body {
   animation: spin 1s linear infinite;
 }
 
-/* ===========================
-   Animations
-=========================== */
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -499,10 +467,6 @@ body {
     opacity: 1;
   }
 }
-
-/* ===========================
-   Mobile
-=========================== */
 
 @media (max-width: 768px) {
   .loading-screen h1 {

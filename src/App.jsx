@@ -20,7 +20,7 @@ import "./App.css";
 const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
 
 const MOBILE_BREAKPOINT = 768;
-const LOADING_DURATION = 4200; // ms — time the "For Anju" screen stays up
+const LOADING_DURATION = 4200;
 
 function App() {
   const flipBook = useRef(null);
@@ -46,18 +46,21 @@ function App() {
       setIsMobile(mobile);
 
       let width;
+      let heightRatio;
 
       if (mobile) {
         width = Math.min(vw * 0.92, 480);
+        heightRatio = 0.72;
       } else {
         width = Math.min(vw * 0.46, 500);
+        heightRatio = 0.66;
       }
 
       const height = width * 1.414;
 
       setBookSize({
         width,
-        height: Math.min(height, vh * 0.82),
+        height: Math.min(height, vh * heightRatio),
       });
     }
 
@@ -97,8 +100,6 @@ function App() {
 
     const current = book.getCurrentPageIndex();
     if (current > 0) {
-      // turnToPage is more reliable than flipPrev(), which can drift out of
-      // sync with the library's own internal index after a remount/resize.
       book.turnToPage(current - 1);
       setHasFlipped(true);
     }
@@ -111,15 +112,10 @@ function App() {
     setHasFlipped(true);
   }, []);
 
-  const replay = useCallback(() => {
-    jumpToPage(0);
-  }, [jumpToPage]);
-
   const handleFlip = (e) => {
     setCurrentPage(e.data);
   };
 
-  // Keyboard arrow support (desktop)
   useEffect(() => {
     function handleKey(e) {
       if (loading) return;
@@ -145,14 +141,12 @@ function App() {
 
   return (
     <div className="container">
-      {/* Warm spotlight glow above the book */}
       <div className="spotlight-glow" />
 
       <div className="book-and-nav">
         <div
           className={`book-wrapper ${isMobile ? "mobile-mode" : "desktop-mode"}`}
         >
-          {/* Layered page-edge sheets — desktop spread only */}
           {!isMobile && (
             <div className="page-edges" aria-hidden="true">
               <div className="edge-sheet edge-sheet-1" />
@@ -224,26 +218,8 @@ function App() {
               ))}
             </HTMLFlipBook>
           )}
-
-          {/* "The End" overlay on the last page */}
-          {isLastPage && (
-            <div className="the-end-overlay">
-              <p className="the-end-text">The End ❤️</p>
-              <button
-                type="button"
-                className="replay-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  replay();
-                }}
-              >
-                ↺ Read again
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Soft ambient light pool under the book */}
         <div className="light-pool" aria-hidden="true" />
 
         <div className="nav-controls">
@@ -294,7 +270,6 @@ function App() {
           </button>
         </div>
 
-        {/* Page count — desktop only */}
         <span className="page-indicator desktop-only">
           {currentPage + 1} / {pages.length}
         </span>
