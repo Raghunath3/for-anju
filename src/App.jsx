@@ -20,6 +20,7 @@ import "./App.css";
 const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
 
 const MOBILE_BREAKPOINT = 768;
+const LOADING_DURATION = 4200; // ms — time the "For Anju" screen stays up
 
 function App() {
   const flipBook = useRef(null);
@@ -31,6 +32,8 @@ function App() {
   const [bookSize, setBookSize] = useState({ width: 400, height: 565 });
 
   const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Responsive book size + mobile/desktop mode
   useEffect(() => {
@@ -70,26 +73,33 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1800);
+    }, LOADING_DURATION);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-open cover (re-runs whenever loading finishes OR mode switches,
-  // since switching mode remounts the flipbook)
-  useEffect(() => {
-    if (!loading && flipBook.current) {
-      const timer = setTimeout(() => {
-        try {
-          flipBook.current.pageFlip().flipNext();
-        } catch (err) {
-          console.log(err);
-        }
-      }, 1200);
+  // NOTE: the old auto-flip-past-the-cover effect has been removed on purpose.
+  // The reader now stays on the cover until they tap/click Next themselves.
 
-      return () => clearTimeout(timer);
+  const goNext = () => {
+    try {
+      flipBook.current?.pageFlip()?.flipNext();
+    } catch (err) {
+      console.log(err);
     }
-  }, [loading, isMobile]);
+  };
+
+  const goPrev = () => {
+    try {
+      flipBook.current?.pageFlip()?.flipPrev();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleFlip = (e) => {
+    setCurrentPage(e.data);
+  };
 
   if (loading) {
     return (
@@ -101,66 +111,99 @@ function App() {
     );
   }
 
+  const isFirstPage = currentPage === 0;
+  const isLastPage = currentPage >= pages.length - 1;
+
   return (
     <div className="container">
-      <div className={`book-wrapper ${isMobile ? "mobile-mode" : "desktop-mode"}`}>
-        {isMobile ? (
-          <HTMLFlipBook
-            key="mobile-book"
-            ref={flipBook}
-            width={bookSize.width}
-            height={bookSize.height}
-            size="fixed"
-            minWidth={250}
-            maxWidth={500}
-            minHeight={353}
-            maxHeight={750}
-            showCover={true}
-            usePortrait={true}
-            mobileScrollSupport={true}
-            maxShadowOpacity={0.5}
-            disableFlipByClick={true}
-            clickEventForward={false}
-            flippingTime={900}
+      <div className="book-and-nav">
+        <div
+          className={`book-wrapper ${isMobile ? "mobile-mode" : "desktop-mode"}`}
+        >
+          {isMobile ? (
+            <HTMLFlipBook
+              key="mobile-book"
+              ref={flipBook}
+              width={bookSize.width}
+              height={bookSize.height}
+              size="fixed"
+              minWidth={250}
+              maxWidth={500}
+              minHeight={353}
+              maxHeight={750}
+              showCover={true}
+              usePortrait={true}
+              mobileScrollSupport={true}
+              maxShadowOpacity={0.5}
+              disableFlipByClick={true}
+              clickEventForward={false}
+              flippingTime={1500}
+              onFlip={handleFlip}
+            >
+              {pages.map((img, index) => (
+                <div
+                  className={`page ${index === 0 ? "cover-page" : ""}`}
+                  key={index}
+                >
+                  <img src={img} alt={`Page ${index + 1}`} />
+                </div>
+              ))}
+            </HTMLFlipBook>
+          ) : (
+            <HTMLFlipBook
+              key="desktop-book"
+              ref={flipBook}
+              width={bookSize.width}
+              height={bookSize.height}
+              size="fixed"
+              minWidth={250}
+              maxWidth={500}
+              minHeight={353}
+              maxHeight={707}
+              showCover={true}
+              usePortrait={false}
+              mobileScrollSupport={true}
+              maxShadowOpacity={0.5}
+              disableFlipByClick={true}
+              clickEventForward={false}
+              flippingTime={900}
+              onFlip={handleFlip}
+            >
+              {pages.map((img, index) => (
+                <div
+                  className={`page ${index === 0 ? "cover-page" : ""}`}
+                  key={index}
+                >
+                  <img src={img} alt={`Page ${index + 1}`} />
+                </div>
+              ))}
+            </HTMLFlipBook>
+          )}
+        </div>
+
+        <div className="nav-controls">
+          <button
+            className="nav-btn"
+            onClick={goPrev}
+            disabled={isFirstPage}
+            aria-label="Previous page"
           >
-            {pages.map((img, index) => (
-              <div
-                className={`page ${index === 0 ? "cover-page" : ""}`}
-                key={index}
-              >
-                <img src={img} alt={`Page ${index + 1}`} />
-              </div>
-            ))}
-          </HTMLFlipBook>
-        ) : (
-          <HTMLFlipBook
-            key="desktop-book"
-            ref={flipBook}
-            width={bookSize.width}
-            height={bookSize.height}
-            size="fixed"
-            minWidth={250}
-            maxWidth={500}
-            minHeight={353}
-            maxHeight={707}
-            showCover={true}
-            usePortrait={false}
-            mobileScrollSupport={true}
-            maxShadowOpacity={0.5}
-            disableFlipByClick={true}
-            clickEventForward={false}
-            flippingTime={900}
+            ‹
+          </button>
+
+          <span className="page-indicator">
+            {currentPage + 1} / {pages.length}
+          </span>
+
+          <button
+            className="nav-btn"
+            onClick={goNext}
+            disabled={isLastPage}
+            aria-label="Next page"
           >
-            {pages.map((img, index) => (
-              <div
-                className={`page ${index === 0 ? "cover-page" : ""}`}
-                key={index}
-              >
-                <img src={img} alt={`Page ${index + 1}`} />
-              </div>
-            ))}
-          </HTMLFlipBook>
-        )}
+            ›
+          </button>
+        </div>
       </div>
     </div>
   );
