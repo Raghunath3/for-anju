@@ -122,7 +122,7 @@ function App() {
     return (
       <div className="loading-screen">
         <h1>For Anju ❤️</h1>
-        <p>Every page holds a piece of my heart.</p>
+        <p>This won't take long, smile first :)</p>
         <div className="loader"></div>
       </div>
     );
