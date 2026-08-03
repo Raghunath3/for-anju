@@ -165,7 +165,7 @@ function App() {
     return (
       <div className="loading-screen">
         <h1>For Anju ❤️</h1>
-        <p>Smile first :)</p>
+        <p>This wont take much time, Smile first :)</p>
         <div className="loader"></div>
       </div>
     );
