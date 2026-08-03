@@ -20,7 +20,16 @@ import "./App.css";
 const pages = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13];
 
 const MOBILE_BREAKPOINT = 768;
-const LOADING_DURATION = 4200;
+const MIN_LOADING_DURATION = 4200; // ms — minimum time the "For Anju" screen stays up
+
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = resolve;
+    img.onerror = resolve; // don't block forever on one bad file
+    img.src = src;
+  });
+}
 
 function App() {
   const flipBook = useRef(null);
@@ -31,9 +40,44 @@ function App() {
 
   const [bookSize, setBookSize] = useState({ width: 400, height: 565 });
   const [loading, setLoading] = useState(true);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasFlipped, setHasFlipped] = useState(false);
 
+  // ===========================
+  // Preload all 13 page images in parallel, starting immediately on mount
+  // ===========================
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all(pages.map(preloadImage)).then(() => {
+      if (!cancelled) setImagesReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Minimum time the loading screen stays visible, so it doesn't flash by
+  // instantly on a fast connection
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), MIN_LOADING_DURATION);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Only dismiss loading once BOTH the images are ready AND the minimum
+  // display time has passed — whichever finishes last decides.
+  useEffect(() => {
+    if (imagesReady && minTimeElapsed) {
+      setLoading(false);
+    }
+  }, [imagesReady, minTimeElapsed]);
+
+  // ===========================
+  // Responsive book size + mode
+  // ===========================
   useEffect(() => {
     function resizeBook() {
       const vw = window.innerWidth;
@@ -66,15 +110,14 @@ function App() {
     return () => window.removeEventListener("resize", resizeBook);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), LOADING_DURATION);
-    return () => clearTimeout(timer);
-  }, []);
-
+  // Reset page counter whenever the book remounts (mobile <-> desktop)
   useEffect(() => {
     setCurrentPage(0);
   }, [isMobile]);
 
+  // ===========================
+  // Navigation
+  // ===========================
   const goNext = useCallback(() => {
     const book = flipBook.current?.pageFlip();
     if (!book) return;
@@ -122,7 +165,7 @@ function App() {
     return (
       <div className="loading-screen">
         <h1>For Anju ❤️</h1>
-        <p>This won't take long, smile first :)</p>
+        <p>Every page holds a piece of my heart.</p>
         <div className="loader"></div>
       </div>
     );
